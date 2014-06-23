@@ -4,7 +4,7 @@ A WordPress plugin for handling Minecraft server whitelist applications, and aut
 
 ## Attributions
 ### xPaw
-* PHP Source Query
+* <a href="https://github.com/xPaw/PHP-Source-Query-Class" target="_blank">PHP Source Query</a>
 
 ## License
 >*This work is licensed under The Do What The Fuck You Want To Public License (WTFPL).
