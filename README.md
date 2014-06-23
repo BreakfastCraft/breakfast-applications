@@ -1,4 +1,4 @@
-# BreakfastStatus
+# BreakfastApplications
 ## Description
 A WordPress plugin for handling Minecraft server whitelist applications, and automatically adds players to the whitelist via xPaw's PHP Source Query RCON protocol.
 
