@@ -8,20 +8,19 @@
 
 require_once( __DIR__ . "/breakfast-applications-list-table.php" );
 
-if ( !class_exists( 'SourceQuery' ) )
+if ( ! class_exists( 'SourceQuery' ) ) {
 	require_once( __DIR__ . "/SourceQuery/SourceQuery.class.php" );
+}
 
-class Breakfast_Applications_Plugin
-{
+class Breakfast_Applications_Plugin {
 	var $servers_option = 'breakfast_applications_servers';
 	var $app_status = array( 'Pending', 'Approved', 'Denied' );
 
-	function __construct()
-	{
+	function __construct() {
 		global $wpdb;
 
-		$this->app_table = $wpdb->prefix . "breakfast_apps_applications";
-		$this->answer_table = $wpdb->prefix . "breakfast_apps_answers";
+		$this->app_table      = $wpdb->prefix . "breakfast_apps_applications";
+		$this->answer_table   = $wpdb->prefix . "breakfast_apps_answers";
 		$this->question_table = $wpdb->prefix . "breakfast_apps_questions";
 
 
@@ -31,8 +30,7 @@ class Breakfast_Applications_Plugin
 		add_shortcode( 'breakfast-application', array( $this, 'form_shortcode' ) );
 	}
 
-	function create_admin_menu()
-	{
+	function create_admin_menu() {
 		add_menu_page( __( 'Applications', 'breakfast-applications' ), __( 'Applications', 'breakfast-applications' ),
 			'promote_users', 'applications', array( $this, 'admin_page_handler' ), 'dashicons-admin-users' );
 
@@ -47,8 +45,7 @@ class Breakfast_Applications_Plugin
 
 	}
 
-	function install_db()
-	{
+	function install_db() {
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 		$answer_sql = "CREATE TABLE $this->answer_table (
@@ -67,7 +64,7 @@ class Breakfast_Applications_Plugin
 			status TINYINT NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id)
 			);";
-		$question_sql = "CREATE TABLE $this->question_table (
+		$question_sql    = "CREATE TABLE $this->question_table (
 			id BIGINT(20) NOT NULL AUTO_INCREMENT ,
 			question TEXT NOT NULL,
 			format VARCHAR(10) NOT NULL DEFAULT 'text',
@@ -87,8 +84,7 @@ class Breakfast_Applications_Plugin
 		}
 	}
 
-	function admin_page_handler()
-	{
+	function admin_page_handler() {
 		global $wpdb;
 		?>
 		<div class="wrap">
@@ -104,14 +100,13 @@ class Breakfast_Applications_Plugin
 	<?php
 	}
 
-	function servers_handler()
-	{
+	function servers_handler() {
 
 		if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( $_POST['_wpnonce'] ) ) {
 			$servers = array();
 			if ( isset( $_POST['servers'] ) ) {
 				foreach ( $_POST['servers'] as $server ) {
-					if ( !empty( $server['host'] ) && !empty( $server['port'] ) && !empty( $server['pass'] ) ) {
+					if ( ! empty( $server['host'] ) && ! empty( $server['port'] ) && ! empty( $server['pass'] ) ) {
 						$servers[] = $server;
 					}
 				}
@@ -119,10 +114,13 @@ class Breakfast_Applications_Plugin
 			update_option( $this->servers_option, $servers );
 		}
 
-		if ( !isset( $servers ) ) {
+		if ( ! isset( $servers ) ) {
 			$servers = get_option( $this->servers_option );
 		}
-		add_meta_box( 'servers_meta_box', 'Servers', array( $this, 'servers_meta_box' ), 'servers_meta_box', 'normal', 'default' );
+		add_meta_box( 'servers_meta_box', 'Servers', array(
+				$this,
+				'servers_meta_box'
+			), 'servers_meta_box', 'normal', 'default' );
 		?>
 		<div class="wrap">
 			<?php
@@ -142,29 +140,28 @@ class Breakfast_Applications_Plugin
 	<?php
 	}
 
-	function servers_meta_box( $servers )
-	{
+	function servers_meta_box( $servers ) {
 		?>
 		<div id="breakfast-servers">
-			<?php for ( $i = 0; $i < count( $servers ); $i++ ): ?>
+			<?php for ( $i = 0; $i < count( $servers ); $i ++ ): ?>
 				<div class="breakfast-server" id="breakfast-<?php echo $i; ?>">
 					<label for="host-<?php echo $i; ?>">Host:</label>
 					<input type="text" name="servers[<?php echo $i; ?>][host]" id="host-<?php echo $i; ?>"
-						   value="<?php echo isset( $_POST['servers'][$i] ) ? $_POST['servers'][$i]['host'] : $servers[$i]['host']; ?>"/>
+					       value="<?php echo isset( $_POST['servers'][ $i ] ) ? $_POST['servers'][ $i ]['host'] : $servers[ $i ]['host']; ?>"/>
 
 					<label for="port-<?php echo $i; ?>">Port:</label>
 					<input type="text" name="servers[<?php echo $i; ?>][port]" id="port-<?php echo $i; ?>"
-						   value="<?php echo isset( $_POST['servers'][$i] ) ? $_POST['servers'][$i]['port'] : $servers[$i]['port']; ?>"/>
+					       value="<?php echo isset( $_POST['servers'][ $i ] ) ? $_POST['servers'][ $i ]['port'] : $servers[ $i ]['port']; ?>"/>
 
 					<label type="text" for="pass-<?php echo $i; ?>">Password:</label>
 					<input type="text" name="servers[<?php echo $i; ?>][pass]" id="pass-<?php echo $i; ?>"
-						   value="<?php echo isset( $_POST['servers'][$i] ) ? $_POST['servers'][$i]['pass'] : $servers[$i]['pass']; ?>"/>
+					       value="<?php echo isset( $_POST['servers'][ $i ] ) ? $_POST['servers'][ $i ]['pass'] : $servers[ $i ]['pass']; ?>"/>
 
 					<label for="host-<?php echo $i; ?>">Master:</label>
 					<input type="hidden" name="servers[<?php echo $i; ?>][master]" value="0"/>
 					<input type="checkbox" name="servers[<?php echo $i; ?>][master]" id="host-<?php echo $i; ?>"
-						   value="1"
-						<?php if ( ( isset( $_POST['servers'][$i] ) && $_POST['servers'][$i]['master'] ) || ( !isset( $_POST['servers'][$i] ) && $servers[$i]['master'] ) ): ?>
+					       value="1"
+						<?php if ( ( isset( $_POST['servers'][ $i ] ) && $_POST['servers'][ $i ]['master'] ) || ( ! isset( $_POST['servers'][ $i ] ) && $servers[ $i ]['master'] ) ): ?>
 							checked
 						<?php endif; ?>>
 
@@ -178,11 +175,10 @@ class Breakfast_Applications_Plugin
 	<?php
 	}
 
-	function questions_handler()
-	{
+	function questions_handler() {
 		global $wpdb;
 		$message = '';
-		$notice = '';
+		$notice  = '';
 
 		if ( isset( $_POST['nonce'] ) && wp_verify_nonce( $_POST['nonce'], basename( __FILE__ ) ) ) {
 			$active_ids = array();
@@ -193,17 +189,25 @@ class Breakfast_Applications_Plugin
 					//update existing question
 					$wpdb->update(
 						$this->question_table,
-						array( 'question' => $question['question'], 'format' => $question['format'], 'status' => 'active' ),
-						array( 'id' => (int)$question['id'] ),
+						array(
+							'question' => $question['question'],
+							'format'   => $question['format'],
+							'status'   => 'active'
+						),
+						array( 'id' => (int) $question['id'] ),
 						'%s',
 						'%d' );
 					$active_ids[] = $question['id'];
 				} else {
 					//insert new question
-					if ( !empty( $question['question'] ) ) {
+					if ( ! empty( $question['question'] ) ) {
 						$wpdb->insert(
 							$this->question_table,
-							array( 'question' => $question['question'], 'format' => $question['format'], 'status' => 'active' )
+							array(
+								'question' => $question['question'],
+								'format'   => $question['format'],
+								'status'   => 'active'
+							)
 						);
 						$active_ids[] = $wpdb->insert_id;
 					}
@@ -223,18 +227,21 @@ class Breakfast_Applications_Plugin
 		}
 
 		$questions = $wpdb->get_results( "SELECT * FROM $this->question_table WHERE status='active'", ARRAY_A );
-		add_meta_box( 'questions_meta_box', 'Questions', array( $this, 'questions_meta_box' ), 'questions', 'normal', 'default' );
+		add_meta_box( 'questions_meta_box', 'Questions', array(
+				$this,
+				'questions_meta_box'
+			), 'questions', 'normal', 'default' );
 
 		?>
 		<div class="wrap">
 		<div class="icon32 icon32-posts-post" id="icon-edit"><br/></div>
 		<h2><?php _e( 'Application Questions', 'breakfast-application' ) ?></h2>
-		<?php if ( !empty( $notice ) ): ?>
-		<div id="notice" class="error"><p><?php echo $notice ?></p></div>
-	<?php endif; ?>
-		<?php if ( !empty( $message ) ): ?>
-		<div id="message" class="updated"><p><?php echo $message ?></p></div>
-	<?php endif; ?>
+		<?php if ( ! empty( $notice ) ): ?>
+			<div id="notice" class="error"><p><?php echo $notice ?></p></div>
+		<?php endif; ?>
+		<?php if ( ! empty( $message ) ): ?>
+			<div id="message" class="updated"><p><?php echo $message ?></p></div>
+		<?php endif; ?>
 		<form method="POST">
 			<input type="hidden" name="nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ) ?>"/>
 			<?php do_meta_boxes( 'questions', 'normal', $questions ); ?>
@@ -242,16 +249,15 @@ class Breakfast_Applications_Plugin
 	<?php
 	}
 
-	function questions_meta_box( $questions )
-	{
+	function questions_meta_box( $questions ) {
 		?>
 		<div id="breakfast-questions">
 			<?php foreach ( $questions as $question ): ?>
 				<div class="breakfast-question" id="breakfast-<?php echo $question['id']; ?>">
 					<input type="hidden" value="<?php echo $question['id']; ?>"
-						   name="questions[<?php echo $question['id']; ?>][id]"/>
+					       name="questions[<?php echo $question['id']; ?>][id]"/>
 					<textarea cols="70" rows="5" class="input"
-							  name="questions[<?php echo $question['id']; ?>][question]"><?php echo $question['question']; ?></textarea><br/>
+					          name="questions[<?php echo $question['id']; ?>][question]"><?php echo $question['question']; ?></textarea><br/>
 					<select name="questions[<?php echo $question['id']; ?>][format]">
 						<option value="text" <?php echo ( $question['format'] == 'text' ) ? 'selected' : ''; ?>>Text
 						</option>
@@ -271,8 +277,7 @@ class Breakfast_Applications_Plugin
 	<?php
 	}
 
-	function applications_javascript()
-	{
+	function applications_javascript() {
 		?>
 		<script type="text/javascript">
 			jQuery(document).ready(function ($) {
@@ -285,11 +290,11 @@ class Breakfast_Applications_Plugin
 				$('button#breakfast-add-question').click(function (event) {
 					event.preventDefault();
 					$('#breakfast-questions').append('<div class="breakfast-question" id="breakfast-new-' + newID + '">' +
-						'<input type="hidden" value="new" name="questions[new-' + newID + '][id]"/>' +
-						'<textarea cols="70" rows="5" class="input" name="questions[new-' + newID + '][question]"></textarea> ' +
-						'<br/><select name="questions[new-' + newID + '][format]"><option value="text">Text</option> ' +
-						'<option value="textarea">Textarea</option></select><br /><button ' +
-						'class="button remove">Remove</button><hr/></div>');
+					'<input type="hidden" value="new" name="questions[new-' + newID + '][id]"/>' +
+					'<textarea cols="70" rows="5" class="input" name="questions[new-' + newID + '][question]"></textarea> ' +
+					'<br/><select name="questions[new-' + newID + '][format]"><option value="text">Text</option> ' +
+					'<option value="textarea">Textarea</option></select><br /><button ' +
+					'class="button remove">Remove</button><hr/></div>');
 					newID += 1;
 				});
 
@@ -302,18 +307,18 @@ class Breakfast_Applications_Plugin
 				$('button#breakfast-add-server').click(function (event) {
 					event.preventDefault();
 					$('#breakfast-servers').append('<div class="breakfast-server" id="breakfast-new-' + serverNewID + '">' +
-						'<label for="host-new-' + serverNewID + '">Host:</label>' +
-						'<input  type="text" name="servers[new-' + serverNewID + '][host]" id="host-new-' + serverNewID + '"/>' +
-						'<label for="port-new-' + serverNewID + '">Port:</label>' +
-						'<input  type="text" name="servers[new-' + serverNewID + '][port]" id="port-new-' + serverNewID + '"/>' +
-						'<label for="pass-new-' + serverNewID + '">Password:</label>' +
-						'<input type="text" name="servers[new-' + serverNewID + '][pass]" id="pass-new-' + serverNewID + '"/>' +
-						'<label for="host-new-' + serverNewID + '">Master:</label>' +
-						'<input type="hidden" name="servers[new-' + serverNewID + '][master]" />' +
-						'<input type="checkbox" name="servers[new-' + serverNewID + '][master]" id="host-new-' + serverNewID + '"/>' +
-						'<button class="button remove">Remove</button>' +
-						'<hr/>' +
-						'</div>');
+					'<label for="host-new-' + serverNewID + '">Host:</label>' +
+					'<input  type="text" name="servers[new-' + serverNewID + '][host]" id="host-new-' + serverNewID + '"/>' +
+					'<label for="port-new-' + serverNewID + '">Port:</label>' +
+					'<input  type="text" name="servers[new-' + serverNewID + '][port]" id="port-new-' + serverNewID + '"/>' +
+					'<label for="pass-new-' + serverNewID + '">Password:</label>' +
+					'<input type="text" name="servers[new-' + serverNewID + '][pass]" id="pass-new-' + serverNewID + '"/>' +
+					'<label for="host-new-' + serverNewID + '">Master:</label>' +
+					'<input type="hidden" name="servers[new-' + serverNewID + '][master]" />' +
+					'<input type="checkbox" name="servers[new-' + serverNewID + '][master]" id="host-new-' + serverNewID + '"/>' +
+					'<button class="button remove">Remove</button>' +
+					'<hr/>' +
+					'</div>');
 					serverNewID += 1;
 				});
 
@@ -323,11 +328,10 @@ class Breakfast_Applications_Plugin
 	<?php
 	}
 
-	function view_application_handler()
-	{
+	function view_application_handler() {
 		global $wpdb;
-		$message = '';
-		$notice = '';
+		$message     = '';
+		$notice      = '';
 		$application = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $this->app_table WHERE id = %d", $_REQUEST['id'] ), ARRAY_A );
 		if ( empty( $application ) ) {
 			wp_redirect( '?page=applications&message=' . urlencode( 'Unable to find application #' . $_REQUEST['id'] . '.' ) );
@@ -348,29 +352,30 @@ class Breakfast_Applications_Plugin
 				ORDER BY id ASC", $application['id'] ), ARRAY_A );
 
 		$ban_info = json_decode( file_get_contents( 'http://api.fishbans.com/bans/' . $application['minecraft_name'] ), true );
-		$bans = 0;
+		$bans     = 0;
 		if ( $ban_info['success'] ) {
 			foreach ( $ban_info['bans']['service'] as $service ) {
 				$bans += $service['bans'];
 			}
 		}
-		if ( !empty( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], basename( __FILE__ ) ) ) {
-			if ( $_REQUEST['op'] == 'approve' )
+		if ( ! empty( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], basename( __FILE__ ) ) ) {
+			if ( $_REQUEST['op'] == 'approve' ) {
 				$message = $this->approve( $_REQUEST['id'] );
-			elseif ( $_REQUEST['op'] == 'deny' )
+			} elseif ( $_REQUEST['op'] == 'deny' ) {
 				$message = $this->deny( $_REQUEST['id'] );
-			else
+			} else {
 				$message = 'Invalid operation.';
+			}
 		}
 		?>
 		<div class="wrap">
 			<div class="icon32 icon32-posts-post" id="icon-edit"><br/></div>
 			<h2><?php _e( 'Applications', 'breakfast-application' ) ?></h2>
 
-			<?php if ( !empty( $notice ) ): ?>
+			<?php if ( ! empty( $notice ) ): ?>
 				<div id="notice" class="error"><p><?php echo $notice ?></p></div>
 			<?php endif; ?>
-			<?php if ( !empty( $message ) ): ?>
+			<?php if ( ! empty( $message ) ): ?>
 				<div id="message" class="updated"><p><?php echo $message ?></p></div>
 			<?php endif; ?>
 
@@ -423,19 +428,18 @@ class Breakfast_Applications_Plugin
 	}
 
 	//[breakfast-application]
-	function form_shortcode( $atts )
-	{
+	function form_shortcode( $atts ) {
 		global $wpdb;
 		$a = shortcode_atts( array(
 			'title' => 'Apply to BreakfastCraft Servers'
 		), $atts );
 
-		$questions = $wpdb->get_results( "SELECT * FROM $this->question_table WHERE status='active'", ARRAY_A );
+		$questions   = $wpdb->get_results( "SELECT * FROM $this->question_table WHERE status='active'", ARRAY_A );
 		$application = $wpdb->get_row( "SELECT * FROM $this->app_table WHERE user_id=" . get_current_user_id(), ARRAY_A );
 
 		if ( $application == null ) {
 			$application = array( 'age' => '', 'minecraft_name' => '' );
-			$answers = array();
+			$answers     = array();
 		} else {
 			$answers = $wpdb->get_results( "SELECT * FROM $this->answer_table WHERE application_id={$application['id']}", ARRAY_A );
 		}
@@ -444,7 +448,7 @@ class Breakfast_Applications_Plugin
 			if ( $application != null ) {
 				$wpdb->update(
 					$this->app_table,
-					array( 'age' => (int)$_POST['age'], 'minecraft_name' => $_POST['minecraft_name'] ),
+					array( 'age' => (int) $_POST['age'], 'minecraft_name' => $_POST['minecraft_name'] ),
 					array( 'id' => $application['id'] ),
 					array( '%d', '%s' ),
 					array( '%d' )
@@ -456,7 +460,7 @@ class Breakfast_Applications_Plugin
 					if ( $answer ) {
 						$wpdb->update(
 							$this->answer_table,
-							array( 'answer' => $_POST['question-' . $question['id']] ),
+							array( 'answer' => $_POST[ 'question-' . $question['id'] ] ),
 							array( 'id' => $answer['id'] )
 						);
 					} else {
@@ -464,8 +468,8 @@ class Breakfast_Applications_Plugin
 							$this->answer_table,
 							array(
 								'application_id' => $application['id'],
-								'question_id' => $question['id'],
-								'answer' => $_POST['question-' . $question['id']]
+								'question_id'    => $question['id'],
+								'answer'         => $_POST[ 'question-' . $question['id'] ]
 							)
 						);
 					}
@@ -475,7 +479,7 @@ class Breakfast_Applications_Plugin
 			} else {
 				$wpdb->insert(
 					$this->app_table,
-					array( 'age' => (int)$_POST['age'], 'minecraft_name' => $_POST['minecraft_name'] ),
+					array( 'age' => (int) $_POST['age'], 'minecraft_name' => $_POST['minecraft_name'] ),
 					array( '%d', '%s' )
 				);
 
@@ -485,8 +489,8 @@ class Breakfast_Applications_Plugin
 						$this->answer_table,
 						array(
 							'application_id' => $application['id'],
-							'question_id' => $question['id'],
-							'answer' => $_POST['question-' . $question['id']]
+							'question_id'    => $question['id'],
+							'answer'         => $_POST[ 'question-' . $question['id'] ]
 						)
 					);
 
@@ -500,11 +504,11 @@ class Breakfast_Applications_Plugin
 
 		ob_start()
 		?>
-		<?php if ( !empty( $message ) ): ?>
-		<div class="alert alert-success">
-			<?php echo $message; ?>
-		</div>
-	<?php endif; ?>
+		<?php if ( ! empty( $message ) ): ?>
+			<div class="alert alert-success">
+				<?php echo $message; ?>
+			</div>
+		<?php endif; ?>
 		<div class="well">
 			<form method="POST" class="form-vertical">
 				<input type="hidden" name="nonce" value="<?php echo wp_create_nonce(); ?>"/>
@@ -513,8 +517,8 @@ class Breakfast_Applications_Plugin
 						<label for="minecraft_name">Minecraft Username</label>
 
 						<input type="text" class="form-control" id="minecraft_name"
-							   value="<?php echo ( isset( $_POST['minecraft_name'] ) ) ? $_POST['minecraft_name'] : $application['minecraft_name']; ?>"
-							   name="minecraft_name"/>
+						       value="<?php echo ( isset( $_POST['minecraft_name'] ) ) ? $_POST['minecraft_name'] : $application['minecraft_name']; ?>"
+						       name="minecraft_name"/>
 
 					</div>
 					<div class="form-group">
@@ -522,7 +526,7 @@ class Breakfast_Applications_Plugin
 
 
 						<input type="text" class="form-control" id="age" name="age"
-							   value="<?php echo ( isset( $_POST['age'] ) ) ? $_POST['age'] : $application['age']; ?>"/>
+						       value="<?php echo ( isset( $_POST['age'] ) ) ? $_POST['age'] : $application['age']; ?>"/>
 
 					</div>
 					<?php foreach ( $questions as $question ): ?>
@@ -538,11 +542,11 @@ class Breakfast_Applications_Plugin
 								for="question-<?php echo $question['id']; ?>"><?php echo $question['question']; ?></label>
 							<?php if ( $question['format'] == 'textarea' ): ?>
 								<textarea class="form-control" id="question-<?php echo $question['id']; ?>"
-										  name="question-<?php echo $question['id']; ?>"><?php echo ( isset( $_POST['question-' . $question['id']] ) ) ? $_POST['question-' . $question['id']] : $answer; ?></textarea>
+								          name="question-<?php echo $question['id']; ?>"><?php echo ( isset( $_POST[ 'question-' . $question['id'] ] ) ) ? $_POST[ 'question-' . $question['id'] ] : $answer; ?></textarea>
 							<?php else: ?>
 								<input type="text" class="form-control" id="question-<?php echo $question['id']; ?>"
-									   name="question-<?php echo $question['id']; ?>"
-									   value="<?php echo ( isset( $_POST['question-' . $question['id']] ) ) ? $_POST['question-' . $question['id']] : $answer; ?>"/>
+								       name="question-<?php echo $question['id']; ?>"
+								       value="<?php echo ( isset( $_POST[ 'question-' . $question['id'] ] ) ) ? $_POST[ 'question-' . $question['id'] ] : $answer; ?>"/>
 							<?php endif; ?>
 						</div>
 					<?php endforeach; ?>
@@ -555,11 +559,11 @@ class Breakfast_Applications_Plugin
 		<?php
 		$out = ob_get_contents();
 		ob_end_clean();
+
 		return $out;
 	}
 
-	function approve( $app_id )
-	{
+	function approve( $app_id ) {
 		global $wpdb;
 
 		$app = $wpdb->get_row( "SELECT * FROM $this->app_table WHERE id=$app_id", ARRAY_A );
@@ -568,12 +572,12 @@ class Breakfast_Applications_Plugin
 		}
 		$this->whitelist( $app['minecraft_name'] );
 		$wpdb->update( $this->app_table, array( 'status' => 1 ), array( 'id' => $app['id'] ), '%d', '%d' );
+
 		return 'Application approved.';
 
 	}
 
-	function deny( $app_id )
-	{
+	function deny( $app_id ) {
 		global $wpdb;
 
 		$app = $wpdb->get_row( "SELECT * FROM $this->app_table WHERE id=$app_id", ARRAY_A );
@@ -581,11 +585,11 @@ class Breakfast_Applications_Plugin
 			return "Could not find application #$app_id";
 		}
 		$wpdb->update( $this->app_table, array( 'status' => 2 ), array( 'id' => $app['id'] ), '%d', '%d' );
+
 		return 'Application denied.';
 	}
 
-	function whitelist( $name )
-	{
+	function whitelist( $name ) {
 		$servers = get_option( $this->servers_option );
 		foreach ( $servers as $server ) {
 			$query = new SourceQuery();
@@ -606,12 +610,13 @@ class Breakfast_Applications_Plugin
 }
 
 
-function sub_array_find( $needle, $haystack, $property )
-{
+function sub_array_find( $needle, $haystack, $property ) {
 	foreach ( $haystack as $hay ) {
-		if ( $hay[$property] == $needle )
+		if ( $hay[ $property ] == $needle ) {
 			return $hay;
+		}
 	}
+
 	return null;
 }
 
