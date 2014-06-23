@@ -6,7 +6,7 @@
 
  */
 
-require_once( __DIR__ . "/breakfast-applications-list-table.php" );
+require_once( __DIR__ . "/includes/breakfast-applications-list-table.php" );
 
 if ( ! class_exists( 'SourceQuery' ) ) {
 	require_once( __DIR__ . "/SourceQuery/SourceQuery.class.php" );
@@ -118,9 +118,9 @@ class Breakfast_Applications_Plugin {
 			$servers = get_option( $this->servers_option );
 		}
 		add_meta_box( 'servers_meta_box', 'Servers', array(
-				$this,
-				'servers_meta_box'
-			), 'servers_meta_box', 'normal', 'default' );
+			$this,
+			'servers_meta_box'
+		), 'servers_meta_box', 'normal', 'default' );
 		?>
 		<div class="wrap">
 			<?php
@@ -141,38 +141,7 @@ class Breakfast_Applications_Plugin {
 	}
 
 	function servers_meta_box( $servers ) {
-		?>
-		<div id="breakfast-servers">
-			<?php for ( $i = 0; $i < count( $servers ); $i ++ ): ?>
-				<div class="breakfast-server" id="breakfast-<?php echo $i; ?>">
-					<label for="host-<?php echo $i; ?>">Host:</label>
-					<input type="text" name="servers[<?php echo $i; ?>][host]" id="host-<?php echo $i; ?>"
-					       value="<?php echo isset( $_POST['servers'][ $i ] ) ? $_POST['servers'][ $i ]['host'] : $servers[ $i ]['host']; ?>"/>
-
-					<label for="port-<?php echo $i; ?>">Port:</label>
-					<input type="text" name="servers[<?php echo $i; ?>][port]" id="port-<?php echo $i; ?>"
-					       value="<?php echo isset( $_POST['servers'][ $i ] ) ? $_POST['servers'][ $i ]['port'] : $servers[ $i ]['port']; ?>"/>
-
-					<label type="text" for="pass-<?php echo $i; ?>">Password:</label>
-					<input type="text" name="servers[<?php echo $i; ?>][pass]" id="pass-<?php echo $i; ?>"
-					       value="<?php echo isset( $_POST['servers'][ $i ] ) ? $_POST['servers'][ $i ]['pass'] : $servers[ $i ]['pass']; ?>"/>
-
-					<label for="host-<?php echo $i; ?>">Master:</label>
-					<input type="hidden" name="servers[<?php echo $i; ?>][master]" value="0"/>
-					<input type="checkbox" name="servers[<?php echo $i; ?>][master]" id="host-<?php echo $i; ?>"
-					       value="1"
-						<?php if ( ( isset( $_POST['servers'][ $i ] ) && $_POST['servers'][ $i ]['master'] ) || ( ! isset( $_POST['servers'][ $i ] ) && $servers[ $i ]['master'] ) ): ?>
-							checked
-						<?php endif; ?>>
-
-					<button class="button remove">Remove</button>
-					<hr/>
-				</div>
-			<?php endfor; ?>
-		</div>
-		<button id="breakfast-add-server" class="button">Add Server</button>
-		<input type="submit" name="submit" class="button" value="Save Servers"/>
-	<?php
+		include( __DIR__ . '/views/servers.metabox.php' );
 	}
 
 	function questions_handler() {
@@ -228,53 +197,15 @@ class Breakfast_Applications_Plugin {
 
 		$questions = $wpdb->get_results( "SELECT * FROM $this->question_table WHERE status='active'", ARRAY_A );
 		add_meta_box( 'questions_meta_box', 'Questions', array(
-				$this,
-				'questions_meta_box'
-			), 'questions', 'normal', 'default' );
+			$this,
+			'questions_meta_box'
+		), 'questions', 'normal', 'default' );
 
-		?>
-		<div class="wrap">
-		<div class="icon32 icon32-posts-post" id="icon-edit"><br/></div>
-		<h2><?php _e( 'Application Questions', 'breakfast-application' ) ?></h2>
-		<?php if ( ! empty( $notice ) ): ?>
-			<div id="notice" class="error"><p><?php echo $notice ?></p></div>
-		<?php endif; ?>
-		<?php if ( ! empty( $message ) ): ?>
-			<div id="message" class="updated"><p><?php echo $message ?></p></div>
-		<?php endif; ?>
-		<form method="POST">
-			<input type="hidden" name="nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ) ?>"/>
-			<?php do_meta_boxes( 'questions', 'normal', $questions ); ?>
-		</form>
-	<?php
+		include( __DIR__ . '/views/questions.php' );
 	}
 
 	function questions_meta_box( $questions ) {
-		?>
-		<div id="breakfast-questions">
-			<?php foreach ( $questions as $question ): ?>
-				<div class="breakfast-question" id="breakfast-<?php echo $question['id']; ?>">
-					<input type="hidden" value="<?php echo $question['id']; ?>"
-					       name="questions[<?php echo $question['id']; ?>][id]"/>
-					<textarea cols="70" rows="5" class="input"
-					          name="questions[<?php echo $question['id']; ?>][question]"><?php echo $question['question']; ?></textarea><br/>
-					<select name="questions[<?php echo $question['id']; ?>][format]">
-						<option value="text" <?php echo ( $question['format'] == 'text' ) ? 'selected' : ''; ?>>Text
-						</option>
-						<option
-							value="textarea" <?php echo ( $question['format'] == 'textarea' ) ? 'selected' : ''; ?>>
-							Textarea
-						</option>
-
-					</select><br/>
-					<button class="button remove">Remove</button>
-					<hr/>
-				</div>
-			<?php endforeach; ?>
-		</div>
-		<button id="breakfast-add-question" class="button">Add Question</button>
-		<input type="submit" name="submit" class="button" value="Save Questions"/>
-	<?php
+		include( __DIR__ . '/views/questions.metabox.php' );
 	}
 
 	function applications_javascript() {
@@ -367,63 +298,8 @@ class Breakfast_Applications_Plugin {
 				$message = 'Invalid operation.';
 			}
 		}
-		?>
-		<div class="wrap">
-			<div class="icon32 icon32-posts-post" id="icon-edit"><br/></div>
-			<h2><?php _e( 'Applications', 'breakfast-application' ) ?></h2>
-
-			<?php if ( ! empty( $notice ) ): ?>
-				<div id="notice" class="error"><p><?php echo $notice ?></p></div>
-			<?php endif; ?>
-			<?php if ( ! empty( $message ) ): ?>
-				<div id="message" class="updated"><p><?php echo $message ?></p></div>
-			<?php endif; ?>
-
-			<form method="POST">
-				<input type="hidden" name="nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ) ?>"/>
-				<input type="hidden" name="id" value="<?php echo $application['id'] ?>"/>
-				<dl>
-					<dt>Username:</dt>
-					<dd><?php echo $user->data->user_login; ?></dd>
-					<dt>Display Name:</dt>
-					<dd><?php echo $user->data->display_name; ?></dd>
-					<dt>Email:</dt>
-					<dd><?php echo $user->data->user_email; ?></dd>
-					<dt>Age:</dt>
-					<dd><?php echo $application['age']; ?></dd>
-					<dt>Minecraft Name:</dt>
-					<dd><?php echo $application['minecraft_name']; ?></dd>
-
-					<?php foreach ( $answers as $answer ): ?>
-						<dt><?php echo $answer['question']; ?></dt>
-						<dd><?php echo $answer['answer']; ?></dd>
-					<?php endforeach; ?>
-				</dl>
-
-				<h2>Fishbans Info</h2>
-
-				<div>
-					<?php if ( $ban_info['success'] ): ?>
-						<dl>
-							<dt>Total Bans: <?php echo $bans; ?></dt>
-							<?php foreach ( $ban_info['bans']['service'] as $service => $values ): ?>
-								<dt><?php echo $service; ?>: <?php echo $values['bans']; ?></dt>
-								<?php foreach ( $values['ban_info'] as $server => $info ): ?>
-									<dd><?php echo $server; ?> - <?php echo $info; ?></dd>
-								<?php endforeach; ?>
-							<?php endforeach; ?>
-						</dl>
-					<?php else: ?>
-						<?php echo $ban_info['error']; ?>
-					<?php endif; ?>
-				</div>
-				<div style="margin-top: 15px;">
-					<button name="op" value="approve" id="op_approve" class="button">Approve</button>
-					<button name="op" value="deny" id="op_deny" class="button">Deny</button>
-				</div>
-			</form>
-		</div>
-	<?php
+		//include page html
+		include( __DIR__ . '/views/view_application.php' );
 
 	}
 
@@ -474,8 +350,6 @@ class Breakfast_Applications_Plugin {
 						);
 					}
 				}
-
-
 			} else {
 				$wpdb->insert(
 					$this->app_table,
@@ -493,70 +367,12 @@ class Breakfast_Applications_Plugin {
 							'answer'         => $_POST[ 'question-' . $question['id'] ]
 						)
 					);
-
-
 				}
-
 			}
 			$message = "<strong>Thank you your applying.</strong> We will review your application and get back to you as quickly as we can.";
 		}
-
-
-		ob_start()
-		?>
-		<?php if ( ! empty( $message ) ): ?>
-			<div class="alert alert-success">
-				<?php echo $message; ?>
-			</div>
-		<?php endif; ?>
-		<div class="well">
-			<form method="POST" class="form-vertical">
-				<input type="hidden" name="nonce" value="<?php echo wp_create_nonce(); ?>"/>
-				<fieldset>
-					<div class="form-group">
-						<label for="minecraft_name">Minecraft Username</label>
-
-						<input type="text" class="form-control" id="minecraft_name"
-						       value="<?php echo ( isset( $_POST['minecraft_name'] ) ) ? $_POST['minecraft_name'] : $application['minecraft_name']; ?>"
-						       name="minecraft_name"/>
-
-					</div>
-					<div class="form-group">
-						<label for="age">Age</label>
-
-
-						<input type="text" class="form-control" id="age" name="age"
-						       value="<?php echo ( isset( $_POST['age'] ) ) ? $_POST['age'] : $application['age']; ?>"/>
-
-					</div>
-					<?php foreach ( $questions as $question ): ?>
-
-						<?php if ( $application == null ) {
-							$answer = '';
-						} else {
-							$answer = $wpdb->get_var( "SELECT answer FROM $this->answer_table WHERE question_id={$question['id']} AND application_id={$application['id']}" );
-						} ?>
-
-						<div class="form-group">
-							<label
-								for="question-<?php echo $question['id']; ?>"><?php echo $question['question']; ?></label>
-							<?php if ( $question['format'] == 'textarea' ): ?>
-								<textarea class="form-control" id="question-<?php echo $question['id']; ?>"
-								          name="question-<?php echo $question['id']; ?>"><?php echo ( isset( $_POST[ 'question-' . $question['id'] ] ) ) ? $_POST[ 'question-' . $question['id'] ] : $answer; ?></textarea>
-							<?php else: ?>
-								<input type="text" class="form-control" id="question-<?php echo $question['id']; ?>"
-								       name="question-<?php echo $question['id']; ?>"
-								       value="<?php echo ( isset( $_POST[ 'question-' . $question['id'] ] ) ) ? $_POST[ 'question-' . $question['id'] ] : $answer; ?>"/>
-							<?php endif; ?>
-						</div>
-					<?php endforeach; ?>
-					<div class="form-group">
-						<input type="submit" value="Submit" name="submit" class="btn btn-primary"/>
-					</div>
-				</fieldset>
-			</form>
-		</div>
-		<?php
+		ob_start();
+		include( __DIR__ . '/views/application.php' );
 		$out = ob_get_contents();
 		ob_end_clean();
 
