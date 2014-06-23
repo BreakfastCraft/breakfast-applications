@@ -1,10 +1,11 @@
 <?php
 /**
- * Plugin Name: Minecraft Applictions
+ * Plugin Name: Breakfastcraft Applictions
  * Version: 0.1
  * Author: Bryan Garcia
 
  */
+
 require_once( __DIR__ . "/breakfast-applications-list-table.php" );
 
 if ( !class_exists( 'SourceQuery' ) )
