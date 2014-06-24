@@ -1,9 +1,9 @@
 # BreakfastApplications
 ## Description
-A WordPress plugin for handling Minecraft server whitelist applications, and automatically adds players to the whitelist via xPaw's PHP Source Query RCON protocol.
+A WordPress plugin for handling Minecraft server whitelist applications, checks the players bans using the Fishban API, and automatically adds players to the whitelist via xPaw's PHP Source Query RCON protocol if the application is approved by an administrator.
 
 ## Attributions
-### xPaw
+* <a href="http://fishbans.com/docs.php" target="_blank">Fishbans API</a>
 * <a href="https://github.com/xPaw/PHP-Source-Query-Class" target="_blank">PHP Source Query</a>
 
 ## License
