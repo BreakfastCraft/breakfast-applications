@@ -16,18 +16,23 @@ class Breakfast_Applications_Plugin {
 	var $servers_option = 'breakfast_applications_servers';
 	var $app_status = array( 'Pending', 'Approved', 'Denied' );
 
+	public static $app_table, $answer_table, $question_table;
+
 	function __construct() {
 		global $wpdb;
 
-		$this->app_table      = $wpdb->prefix . "breakfast_apps_applications";
-		$this->answer_table   = $wpdb->prefix . "breakfast_apps_answers";
-		$this->question_table = $wpdb->prefix . "breakfast_apps_questions";
+		self::$app_table      = $wpdb->prefix . "breakfast_apps_applications";
+		self::$answer_table   = $wpdb->prefix . "breakfast_apps_answers";
+		self::$question_table = $wpdb->prefix . "breakfast_apps_questions";
 
 
 		add_action( 'admin_menu', array( $this, 'create_admin_menu' ) );
 		register_activation_hook( __FILE__, array( $this, 'install_db' ) );
 		add_action( 'admin_footer', array( $this, 'applications_javascript' ) );
 		add_shortcode( 'breakfast-application', array( $this, 'form_shortcode' ) );
+
+		add_filter( 'if_menu_conditions', array( $this, 'if_menu_conditions' ) );
+
 	}
 
 	function create_admin_menu() {
@@ -48,7 +53,7 @@ class Breakfast_Applications_Plugin {
 	function install_db() {
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-		$answer_sql = "CREATE TABLE $this->answer_table (
+		$answer_sql = "CREATE TABLE " . self::$answer_sql . " (
 			id BIGINT(20) NOT NULL AUTO_INCREMENT,
 			application_id BIGINT(20) NOT NULL,
 			question_id BIGINT(20) NOT NULL,
@@ -56,7 +61,7 @@ class Breakfast_Applications_Plugin {
 			PRIMARY KEY  (id)
 			);";
 
-		$application_sql = "CREATE TABLE $this->app_table  (
+		$application_sql = "CREATE TABLE " . self::$application_sql . "  (
 			id BIGINT(20) NOT NULL AUTO_INCREMENT,
 			user_id BIGINT(20) NOT NULL,
 			age TINYINT NOT NULL,
@@ -64,7 +69,7 @@ class Breakfast_Applications_Plugin {
 			status TINYINT NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id)
 			);";
-		$question_sql    = "CREATE TABLE $this->question_table (
+		$question_sql    = "CREATE TABLE " . self::$question_sql . " (
 			id BIGINT(20) NOT NULL AUTO_INCREMENT ,
 			question TEXT NOT NULL,
 			format VARCHAR(10) NOT NULL DEFAULT 'text',
@@ -92,7 +97,7 @@ class Breakfast_Applications_Plugin {
 			<h2><?php _e( 'Applications', 'breakfast-application' ) ?></h2>
 
 			<?php
-			$table = new Breakfast_Applications_List_Table( $this->app_table, $this->answer_table );
+			$table = new Breakfast_Applications_List_Table( self::$app_table, self::$answer_table );
 			$table->prepare_items();
 			$table->display();
 			?>
@@ -183,19 +188,19 @@ class Breakfast_Applications_Plugin {
 				}
 
 				// set all inactive
-				$wpdb->update( $this->question_table, array( 'status' => 'inactive' ), array( 'status' => 'active' ) );
+				$wpdb->update( self::$question_table, array( 'status' => 'inactive' ), array( 'status' => 'active' ) );
 
 				//set questions active
 				$actives = array();
 				foreach ( $active_ids as $id ) {
 					$actives[] = "id = $id";
 				}
-				$wpdb->query( "UPDATE $this->question_table SET status='active' WHERE " . join( ' OR ', $actives ) );
+				$wpdb->query( "UPDATE " . self::$question_table . " SET status='active' WHERE " . join( ' OR ', $actives ) );
 			}
 			//add/update questions
 		}
 
-		$questions = $wpdb->get_results( "SELECT * FROM $this->question_table WHERE status='active'", ARRAY_A );
+		$questions = $wpdb->get_results( "SELECT * FROM " . self::$question_table . " WHERE status='active'", ARRAY_A );
 		add_meta_box( 'questions_meta_box', 'Questions', array(
 			$this,
 			'questions_meta_box'
@@ -263,7 +268,7 @@ class Breakfast_Applications_Plugin {
 		global $wpdb;
 		$message     = '';
 		$notice      = '';
-		$application = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $this->app_table WHERE id = %d", $_REQUEST['id'] ), ARRAY_A );
+		$application = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM " . self::$app_table . " WHERE id = %d", $_REQUEST['id'] ), ARRAY_A );
 		if ( empty( $application ) ) {
 			wp_redirect( '?page=applications&message=' . urlencode( 'Unable to find application #' . $_REQUEST['id'] . '.' ) );
 			exit( 0 );
@@ -274,12 +279,12 @@ class Breakfast_Applications_Plugin {
 		$user = get_user_by( 'id', $application['user_id'] );
 
 		$answers = $wpdb->get_results( $wpdb->prepare( "
-				SELECT $this->answer_table.*, $this->question_table.question
-				FROM $this->answer_table, $this->question_table
+				SELECT " . self::$answer_table . ".*, " . self::$question_table . question . "
+				FROM " . self::$answer_table . ", " . self::$question_table . "
 				WHERE
 					application_id=%d
 					AND
-					$this->answer_table.question_id = $this->question_table.id
+					" . self::$answer_table . ".question_id = " . self::$question_table . id . "
 				ORDER BY id ASC", $application['id'] ), ARRAY_A );
 
 		$ban_info = json_decode( file_get_contents( 'http://api.fishbans.com/bans/' . $application['minecraft_name'] ), true );
@@ -310,14 +315,14 @@ class Breakfast_Applications_Plugin {
 			'title' => 'Apply to BreakfastCraft Servers'
 		), $atts );
 
-		$questions   = $wpdb->get_results( "SELECT * FROM $this->question_table WHERE status='active'", ARRAY_A );
-		$application = $wpdb->get_row( "SELECT * FROM $this->app_table WHERE user_id=" . get_current_user_id(), ARRAY_A );
+		$questions   = $wpdb->get_results( "SELECT * FROM " . self::$question_table . " WHERE status='active'", ARRAY_A );
+		$application = $wpdb->get_row( "SELECT * FROM " . self::$app_table . " WHERE user_id=" . get_current_user_id(), ARRAY_A );
 
 		if ( $application == null ) {
 			$application = array( 'age' => '', 'minecraft_name' => '' );
 			$answers     = array();
 		} else {
-			$answers = $wpdb->get_results( "SELECT * FROM $this->answer_table WHERE application_id={$application['id']}", ARRAY_A );
+			$answers = $wpdb->get_results( "SELECT * FROM " . self::$answer_table . " WHERE application_id={$application['id']}", ARRAY_A );
 		}
 
 		if ( isset( $_POST['nonce'] ) && wp_verify_nonce( $_POST['nonce'] ) ) {
@@ -335,13 +340,13 @@ class Breakfast_Applications_Plugin {
 
 					if ( $answer ) {
 						$wpdb->update(
-							$this->answer_table,
+							self::$answer_table,
 							array( 'answer' => $_POST[ 'question-' . $question['id'] ] ),
 							array( 'id' => $answer['id'] )
 						);
 					} else {
 						$wpdb->insert(
-							$this->answer_table,
+							self::$answer_table,
 							array(
 								'application_id' => $application['id'],
 								'question_id'    => $question['id'],
@@ -352,7 +357,7 @@ class Breakfast_Applications_Plugin {
 				}
 			} else {
 				$wpdb->insert(
-					$this->app_table,
+					self::$app_table,
 					array( 'age' => (int) $_POST['age'], 'minecraft_name' => $_POST['minecraft_name'] ),
 					array( '%d', '%s' )
 				);
@@ -360,7 +365,7 @@ class Breakfast_Applications_Plugin {
 				foreach ( $questions as $question ) {
 
 					$wpdb->insert(
-						$this->answer_table,
+						self::$answer_table,
 						array(
 							'application_id' => $application['id'],
 							'question_id'    => $question['id'],
@@ -382,12 +387,12 @@ class Breakfast_Applications_Plugin {
 	function approve( $app_id ) {
 		global $wpdb;
 
-		$app = $wpdb->get_row( "SELECT * FROM $this->app_table WHERE id=$app_id", ARRAY_A );
+		$app = $wpdb->get_row( "SELECT * FROM " . self::$app_table . " WHERE id=$app_id", ARRAY_A );
 		if ( $app == null ) {
 			return "Could not find application #$app_id";
 		}
 		$this->whitelist( $app['minecraft_name'] );
-		$wpdb->update( $this->app_table, array( 'status' => 1 ), array( 'id' => $app['id'] ), '%d', '%d' );
+		$wpdb->update( self::$app_table, array( 'status' => 1 ), array( 'id' => $app['id'] ), '%d', '%d' );
 
 		return 'Application approved.';
 
@@ -396,11 +401,11 @@ class Breakfast_Applications_Plugin {
 	function deny( $app_id ) {
 		global $wpdb;
 
-		$app = $wpdb->get_row( "SELECT * FROM $this->app_table WHERE id=$app_id", ARRAY_A );
+		$app = $wpdb->get_row( "SELECT * FROM " . self::$app_table . " WHERE id=$app_id", ARRAY_A );
 		if ( $app == null ) {
 			return "Could not find application #$app_id";
 		}
-		$wpdb->update( $this->app_table, array( 'status' => 2 ), array( 'id' => $app['id'] ), '%d', '%d' );
+		$wpdb->update( self::$app_table, array( 'status' => 2 ), array( 'id' => $app['id'] ), '%d', '%d' );
 
 		return 'Application denied.';
 	}
@@ -421,6 +426,26 @@ class Breakfast_Applications_Plugin {
 				echo $e->getMessage();
 			}
 		}
+	}
+
+	function if_menu_conditions() {
+		$conditions[] = array(
+			'name'      => 'If logged in and application not approved',
+			'condition' => function ( $item ) {
+				global $wpdb;
+				if ( ! is_user_logged_in() ) {
+					return false;
+				}
+				$application = $wpdb->get_row( "SELECT * FROM " . Breakfast_Applications_Plugin::$app_table . " WHERE user_id=" . get_current_user_id(), ARRAY_A );
+				if ( $application == null || $application['status'] == 1 ) {
+					return false;
+				}
+
+				return true;
+			}
+		);
+
+		return $conditions;
 	}
 
 }

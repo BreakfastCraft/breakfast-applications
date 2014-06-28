@@ -28,7 +28,7 @@
 				<?php if ( $application == null ) {
 					$answer = '';
 				} else {
-					$answer = $wpdb->get_var( "SELECT answer FROM $this->answer_table WHERE question_id={$question['id']} AND application_id={$application['id']}" );
+					$answer = $wpdb->get_var( "SELECT answer FROM " . self::$answer_table . " WHERE question_id={$question['id']} AND application_id={$application['id']}" );
 				} ?>
 
 				<div class="form-group">
