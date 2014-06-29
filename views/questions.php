@@ -8,7 +8,7 @@
 		<div id="message" class="updated"><p><?php echo $message ?></p></div>
 	<?php endif; ?>
 	<form method="POST">
-		<input type="hidden" name="nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ) ?>"/>
+		<?php echo wp_nonce_field( 'questions' ) ?>
 		<?php do_meta_boxes( 'questions', 'normal', $questions ); ?>
 	</form>
 </div>

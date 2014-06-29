@@ -46,7 +46,8 @@ class Breakfast_Applications_List_Table extends WP_List_Table {
 			'user_name'      => __( 'Username', 'breakfast-applications' ),
 			'age'            => __( 'Age', 'breakfast-applications' ),
 			'minecraft_name' => __( 'Minecraft Name', 'breakfast-applications' ),
-			'status'         => __( 'Application Status', 'breakfast-applications' )
+			'status'         => __( 'Application Status', 'breakfast-applications' ),
+			'applied_on'    => __('Applied', 'breakfast-applications')
 		);
 
 		return $columns;

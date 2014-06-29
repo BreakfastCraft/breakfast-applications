@@ -53,7 +53,7 @@ class Breakfast_Applications_Plugin {
 	function install_db() {
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-		$answer_sql = "CREATE TABLE " . self::$answer_sql . " (
+		$answer_sql = "CREATE TABLE " . self::$answer_table . " (
 			id BIGINT(20) NOT NULL AUTO_INCREMENT,
 			application_id BIGINT(20) NOT NULL,
 			question_id BIGINT(20) NOT NULL,
@@ -61,15 +61,17 @@ class Breakfast_Applications_Plugin {
 			PRIMARY KEY  (id)
 			);";
 
-		$application_sql = "CREATE TABLE " . self::$application_sql . "  (
+		$application_sql = "CREATE TABLE " . self::$app_table . "  (
 			id BIGINT(20) NOT NULL AUTO_INCREMENT,
 			user_id BIGINT(20) NOT NULL,
 			age TINYINT NOT NULL,
 			minecraft_name VARCHAR(25) NOT NULL,
 			status TINYINT NOT NULL DEFAULT 0,
+			applied_on DATETIME NOT NULL,
+			decision_on DATETIME NULL,
 			PRIMARY KEY  (id)
 			);";
-		$question_sql    = "CREATE TABLE " . self::$question_sql . " (
+		$question_sql    = "CREATE TABLE " . self::$question_table . " (
 			id BIGINT(20) NOT NULL AUTO_INCREMENT ,
 			question TEXT NOT NULL,
 			format VARCHAR(10) NOT NULL DEFAULT 'text',
@@ -154,7 +156,7 @@ class Breakfast_Applications_Plugin {
 		$message = '';
 		$notice  = '';
 
-		if ( isset( $_POST['nonce'] ) && wp_verify_nonce( $_POST['nonce'], basename( __FILE__ ) ) ) {
+		if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( $_POST['_wpnonce'], 'questions' ) ) {
 			$active_ids = array();
 			foreach ( $_POST['questions'] as $question ) {
 				$question['question'] = trim( $question['question'] );
@@ -176,7 +178,7 @@ class Breakfast_Applications_Plugin {
 					//insert new question
 					if ( ! empty( $question['question'] ) ) {
 						$wpdb->insert(
-							$this->question_table,
+							self::$question_table,
 							array(
 								'question' => $question['question'],
 								'format'   => $question['format'],
@@ -279,12 +281,12 @@ class Breakfast_Applications_Plugin {
 		$user = get_user_by( 'id', $application['user_id'] );
 
 		$answers = $wpdb->get_results( $wpdb->prepare( "
-				SELECT " . self::$answer_table . ".*, " . self::$question_table . question . "
+				SELECT " . self::$answer_table . ".*, " . self::$question_table . ".question
 				FROM " . self::$answer_table . ", " . self::$question_table . "
 				WHERE
 					application_id=%d
 					AND
-					" . self::$answer_table . ".question_id = " . self::$question_table . id . "
+					" . self::$answer_table . ".question_id = " . self::$question_table . ".id
 				ORDER BY id ASC", $application['id'] ), ARRAY_A );
 
 		$ban_info = json_decode( file_get_contents( 'http://api.fishbans.com/bans/' . $application['minecraft_name'] ), true );
@@ -294,7 +296,7 @@ class Breakfast_Applications_Plugin {
 				$bans += $service['bans'];
 			}
 		}
-		if ( ! empty( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], basename( __FILE__ ) ) ) {
+		if ( ! empty( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], 'view_application' ) ) {
 			if ( $_REQUEST['op'] == 'approve' ) {
 				$message = $this->approve( $_REQUEST['id'] );
 			} elseif ( $_REQUEST['op'] == 'deny' ) {
@@ -326,12 +328,16 @@ class Breakfast_Applications_Plugin {
 		}
 
 		if ( isset( $_POST['nonce'] ) && wp_verify_nonce( $_POST['nonce'] ) ) {
-			if ( $application != null ) {
+			if ( isset( $application['id'] ) ) {
 				$wpdb->update(
-					$this->app_table,
-					array( 'age' => (int) $_POST['age'], 'minecraft_name' => $_POST['minecraft_name'] ),
+					self::$app_table,
+					array(
+						'age'            => (int) $_POST['age'],
+						'minecraft_name' => $_POST['minecraft_name'],
+						'applied_on'     => current_time( 'mysql', 1 )
+					),
 					array( 'id' => $application['id'] ),
-					array( '%d', '%s' ),
+					array( '%d', '%s', '%s' ),
 					array( '%d' )
 				);
 				foreach ( $questions as $question ) {
@@ -358,9 +364,15 @@ class Breakfast_Applications_Plugin {
 			} else {
 				$wpdb->insert(
 					self::$app_table,
-					array( 'age' => (int) $_POST['age'], 'minecraft_name' => $_POST['minecraft_name'] ),
-					array( '%d', '%s' )
+					array(
+						'user_id'        => get_current_user_id(),
+						'age'            => (int) $_POST['age'],
+						'minecraft_name' => $_POST['minecraft_name'],
+						'applied_on'     => current_time( 'mysql', 1 )
+					),
+					array( '%d', '%s', '%s', '%s' )
 				);
+				$application = $wpdb->get_row( "SELECT * FROM " . self::$app_table . " WHERE id=" . $wpdb->insert_id, ARRAY_A );
 
 				foreach ( $questions as $question ) {
 
@@ -392,7 +404,10 @@ class Breakfast_Applications_Plugin {
 			return "Could not find application #$app_id";
 		}
 		$this->whitelist( $app['minecraft_name'] );
-		$wpdb->update( self::$app_table, array( 'status' => 1 ), array( 'id' => $app['id'] ), '%d', '%d' );
+		$wpdb->update( self::$app_table, array(
+			'status'      => 1,
+			'decision_on' => current_time( 'mysql', 1 )
+		), array( 'id' => $app['id'] ), array( '%d', '%s' ), '%d' );
 
 		return 'Application approved.';
 
@@ -405,7 +420,10 @@ class Breakfast_Applications_Plugin {
 		if ( $app == null ) {
 			return "Could not find application #$app_id";
 		}
-		$wpdb->update( self::$app_table, array( 'status' => 2 ), array( 'id' => $app['id'] ), '%d', '%d' );
+		$wpdb->update( self::$app_table, array(
+			'status'      => 2,
+			'decision_on' => current_time( 'mysql', 1 )
+		), array( 'id' => $app['id'] ), array( '%d', '%s' ), '%d' );
 
 		return 'Application denied.';
 	}
@@ -437,11 +455,11 @@ class Breakfast_Applications_Plugin {
 					return false;
 				}
 				$application = $wpdb->get_row( "SELECT * FROM " . Breakfast_Applications_Plugin::$app_table . " WHERE user_id=" . get_current_user_id(), ARRAY_A );
-				if ( $application == null || $application['status'] == 1 ) {
-					return false;
+				if ( $application == null || $application['status'] != 1 ) {
+					return true;
 				}
 
-				return true;
+				return false;
 			}
 		);
 

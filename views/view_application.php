@@ -10,7 +10,7 @@
 	<?php endif; ?>
 
 	<form method="POST">
-		<input type="hidden" name="nonce" value="<?php echo wp_create_nonce( basename( __FILE__ ) ) ?>"/>
+		<input type="hidden" name="nonce" value="<?php echo wp_create_nonce( 'view_application' ) ?>"/>
 		<input type="hidden" name="id" value="<?php echo $application['id'] ?>"/>
 		<dl>
 			<dt>Username:</dt>

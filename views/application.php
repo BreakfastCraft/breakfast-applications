@@ -25,7 +25,7 @@
 			</div>
 			<?php foreach ( $questions as $question ): ?>
 
-				<?php if ( $application == null ) {
+				<?php if ( ! isset( $application['id'] ) ) {
 					$answer = '';
 				} else {
 					$answer = $wpdb->get_var( "SELECT answer FROM " . self::$answer_table . " WHERE question_id={$question['id']} AND application_id={$application['id']}" );
