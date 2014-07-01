@@ -431,19 +431,30 @@ class Breakfast_Applications_Plugin {
 	function whitelist( $name ) {
 		$servers = get_option( $this->servers_option );
 		foreach ( $servers as $server ) {
+			if ( $server['master'] ) {
+				$query = new SourceQuery();
+				try {
+					$query->Connect( $server['host'], $server['port'], 1, SourceQuery::SOURCE );
+					$query->SetRconPassword( $server['pass'] );
+					$query->Rcon( "whitelist add $name" );
+				} catch ( Exception $e ) {
+					echo $e->getMessage();
+				}
+			}
+		}
+
+		foreach ( $servers as $server ) {
 			$query = new SourceQuery();
 			try {
 				$query->Connect( $server['host'], $server['port'], 1, SourceQuery::SOURCE );
 				$query->SetRconPassword( $server['pass'] );
-				if ( $server['master'] ) {
-					$query->Rcon( "whitelist add $name" );
-				}
 				$query->Rcon( "whitelist reload" );
 
 			} catch ( Exception $e ) {
 				echo $e->getMessage();
 			}
 		}
+
 	}
 
 	function if_menu_conditions() {
