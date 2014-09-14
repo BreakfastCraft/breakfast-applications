@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Breakfastcraft Applictions
- * Version: 0.0.2
+ * Version: 0.0.3
  * Author: Bryan Garcia
 
  */
@@ -48,11 +48,12 @@ class Breakfast_Applications_Plugin extends Breakfast_Applications_Base {
 					$this->app_table,
 					array(
 						'age'            => (int) $_POST['age'],
+						'status'         => 'pending',
 						'minecraft_name' => $_POST['minecraft_name'],
 						'applied_on'     => current_time( 'mysql', 1 )
 					),
 					array( 'id' => $application['id'] ),
-					array( '%d', '%s', '%s' ),
+					array( '%d', '%s', '%s', '%s' ),
 					array( '%d' )
 				);
 				foreach ( $questions as $question ) {
@@ -120,7 +121,7 @@ class Breakfast_Applications_Plugin extends Breakfast_Applications_Base {
 					return false;
 				}
 				$application = $wpdb->get_row( "SELECT * FROM " . $this->app_table . " WHERE user_id=" . get_current_user_id(), ARRAY_A );
-				if ( $application == null || $application['status'] != 1 ) {
+				if ( $application == null || $application['status'] != 'approved' ) {
 					return true;
 				}
 

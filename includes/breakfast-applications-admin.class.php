@@ -13,7 +13,10 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 	public function __construct() {
 		parent::__construct();
 		add_action( 'admin_menu', array( $this, 'create_admin_menu' ) );
-		register_activation_hook( plugin_dir_path(__DIR__) . 'breakfast-applications.php', array( $this, 'install_db' ) );
+		register_activation_hook( plugin_dir_path( __DIR__ ) . 'breakfast-applications.php', array(
+				$this,
+				'install_db'
+			) );
 		add_action( 'admin_footer', array( $this, 'applications_javascript' ) );
 	}
 
@@ -33,9 +36,10 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 			user_id BIGINT(20) NOT NULL,
 			age TINYINT NOT NULL,
 			minecraft_name VARCHAR(25) NOT NULL,
-			status TINYINT NOT NULL DEFAULT 0,
+			status varchar(10) NOT NULL DEFAULT 'pending',
 			applied_on DATETIME NOT NULL,
 			decision_on DATETIME NULL,
+			reason TEXT NULL,
 			PRIMARY KEY  (id)
 			);";
 		$question_sql    = "CREATE TABLE " . $this->question_table . " (
@@ -250,6 +254,17 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 	}
 
 	function view_application_handler() {
+
+		if ( ! empty( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], 'view_application' ) ) {
+			if ( $_REQUEST['op'] == 'approve' ) {
+				$message = $this->approve( $_REQUEST['id'] );
+			} elseif ( $_REQUEST['op'] == 'deny' ) {
+				$message = $this->deny( $_REQUEST['id'], $_REQUEST['reason'] );
+			} else {
+				$message = 'Invalid operation.';
+			}
+		}
+		
 		global $wpdb;
 		$message     = '';
 		$notice      = '';
@@ -279,15 +294,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 				$bans += $service['bans'];
 			}
 		}
-		if ( ! empty( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], 'view_application' ) ) {
-			if ( $_REQUEST['op'] == 'approve' ) {
-				$message = $this->approve( $_REQUEST['id'] );
-			} elseif ( $_REQUEST['op'] == 'deny' ) {
-				$message = $this->deny( $_REQUEST['id'] );
-			} else {
-				$message = 'Invalid operation.';
-			}
-		}
+
 		//include page html
 		include plugin_dir_path( __DIR__ ) . 'views/view_application.php';
 
@@ -302,7 +309,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 		}
 		$this->whitelist( $app['minecraft_name'] );
 		$wpdb->update( $this->app_table, array(
-			'status'      => 1,
+			'status' => 'approved',
 			'decision_on' => current_time( 'mysql', 1 )
 		), array( 'id' => $app['id'] ), array( '%d', '%s' ), '%d' );
 
@@ -310,7 +317,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 
 	}
 
-	function deny( $app_id ) {
+	function deny( $app_id, $reason ) {
 		global $wpdb;
 
 		$app = $wpdb->get_row( "SELECT * FROM " . $this->app_table . " WHERE id=$app_id", ARRAY_A );
@@ -318,9 +325,10 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 			return "Could not find application #$app_id";
 		}
 		$wpdb->update( $this->app_table, array(
-			'status'      => 2,
+			'status'      => 'denied',
+			'reason'      => $reason,
 			'decision_on' => current_time( 'mysql', 1 )
-		), array( 'id' => $app['id'] ), array( '%d', '%s' ), '%d' );
+		), array( 'id' => $app['id'] ), array( '%s', '%s', '%s' ), '%d' );
 
 		return 'Application denied.';
 	}

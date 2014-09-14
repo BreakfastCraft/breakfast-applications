@@ -4,7 +4,7 @@ class Breakfast_Applications_Base {
 	public $app_table;
 	public $answer_table;
 	public $question_table;
-	public $version = '0.0.2';
+	public $version = '0.0.3';
 
 	function __construct() {
 		global $wpdb;
