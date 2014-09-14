@@ -264,7 +264,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 				$message = 'Invalid operation.';
 			}
 		}
-		
+
 		global $wpdb;
 		$message     = '';
 		$notice      = '';
@@ -312,7 +312,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 			'status' => 'approved',
 			'decision_on' => current_time( 'mysql', 1 )
 		), array( 'id' => $app['id'] ), array( '%d', '%s' ), '%d' );
-
+		
 		return 'Application approved.';
 
 	}

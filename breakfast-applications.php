@@ -31,7 +31,13 @@ class Breakfast_Applications_Plugin extends Breakfast_Applications_Base {
 		$a = shortcode_atts( array(
 			'title' => 'Apply to BreakfastCraft Servers'
 		), $atts );
-
+		if (! is_user_logged_in()) {
+			?>
+			<h2>Account Required</h2>
+			<p>You must be signed in before you can apply. <a href="/wp-login.php">Login</a> or <a href="/wp-login.php?action=register">Register</a></p>
+			<?php
+			return;
+		}
 		$questions   = $wpdb->get_results( "SELECT * FROM " . $this->question_table . " WHERE STATUS='active'", ARRAY_A );
 		$application = $wpdb->get_row( "SELECT * FROM " . $this->app_table . " WHERE user_id=" . get_current_user_id(), ARRAY_A );
 
@@ -114,11 +120,11 @@ class Breakfast_Applications_Plugin extends Breakfast_Applications_Base {
 
 	function if_menu_conditions() {
 		$conditions[] = array(
-			'name'      => 'If logged in and application not approved',
+			'name'      => 'If application not approved',
 			'condition' => function ( $item ) {
 				global $wpdb;
 				if ( ! is_user_logged_in() ) {
-					return false;
+					return true;
 				}
 				$application = $wpdb->get_row( "SELECT * FROM " . $this->app_table . " WHERE user_id=" . get_current_user_id(), ARRAY_A );
 				if ( $application == null || $application['status'] != 'approved' ) {
