@@ -357,7 +357,7 @@ EOT;
 Congratulations and welcome to BreakfastCraft. Your application has been approved and you are now whitelisted on our servers. Please read and follow all the rules.
 
 * Rules - http://breakfastcraft.com/rules
-* Connection Information - http://breakfastcraft.com/connection_information
+* Connection Information - http://breakfastcraft.com/connection-information
 * IRC - Server: pinebox.ddns.net Channel: #breakfastcraft
 
 Thanks for applying and welcome to the community.
