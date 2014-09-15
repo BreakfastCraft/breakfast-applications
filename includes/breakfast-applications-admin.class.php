@@ -14,9 +14,9 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 		parent::__construct();
 		add_action( 'admin_menu', array( $this, 'create_admin_menu' ) );
 		register_activation_hook( plugin_dir_path( __DIR__ ) . 'breakfast-applications.php', array(
-				$this,
-				'install_db'
-			) );
+			$this,
+			'install_db'
+		) );
 		add_action( 'admin_footer', array( $this, 'applications_javascript' ) );
 	}
 
@@ -309,10 +309,11 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 		}
 		$this->whitelist( $app['minecraft_name'] );
 		$wpdb->update( $this->app_table, array(
-			'status' => 'approved',
+			'status'      => 'approved',
 			'decision_on' => current_time( 'mysql', 1 )
-		), array( 'id' => $app['id'] ), array( '%d', '%s' ), '%d' );
-		
+		), array( 'id' => $app['id'] ), array( '%s', '%s' ), '%d' );
+		$this->approve_email( $app['user_id'] );
+
 		return 'Application approved.';
 
 	}
@@ -329,8 +330,43 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 			'reason'      => $reason,
 			'decision_on' => current_time( 'mysql', 1 )
 		), array( 'id' => $app['id'] ), array( '%s', '%s', '%s' ), '%d' );
+		$this->deny_email( $app['user_id'], $reason );
 
 		return 'Application denied.';
+	}
+
+	function deny_email( $user_id, $reason ) {
+		$content = <<<EOT
+We're sorry but we could not accept your application at this time.
+
+Reason for denial:
+$reason
+
+If feel our reason is wrong, or wish you to discuss your application feel free to join us on our IRC channel.
+
+--
+The BreakfastCraft Team
+EOT;
+		$user    = get_user_by( 'id', $user_id );
+		wp_mail( $user->data->user_email, 'BreakfastCraft Application Status', $content );
+
+	}
+
+	function approve_email( $user_id ) {
+		$content = <<<EOT
+Congratulations and welcome to BreakfastCraft. Your application has been approved and you are now whitelisted on our servers. Please read and follow all the rules.
+
+* Rules - http://breakfastcraft.com/rules
+* Connection Information - http://breakfastcraft.com/connection_information
+* IRC - Server: pinebox.ddns.net Channel: #breakfastcraft
+
+Thanks for applying and welcome to the community.
+
+--
+The BreakfastCraft Team
+EOT;
+		$user    = get_user_by( 'id', $user_id );
+		wp_mail( $user->data->user_email, 'BreakfastCraft Application Status', $content );
 	}
 
 	function whitelist( $name ) {
