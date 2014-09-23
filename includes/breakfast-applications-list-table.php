@@ -6,12 +6,12 @@ if ( ! class_exists( 'WP_LIST_TABLE' ) ) {
 class Breakfast_Applications_List_Table extends WP_List_Table {
 	var $app_table;
 	var $answer_table;
+	var $tab;
 
-	var $app_status = array( 'Pending', 'Approved', 'Denied' );
-
-	function __construct( $app_table, $answer_table ) {
+	function __construct( $app_table, $answer_table, $tab ) {
 		$this->app_table    = $app_table;
 		$this->answer_table = $answer_table;
+		$this->tab = $tab;
 
 		parent::__construct( array(
 			'singular' => 'application',
@@ -64,7 +64,7 @@ class Breakfast_Applications_List_Table extends WP_List_Table {
 
 		$this->_column_headers = array( $columns, $hidden, $sortable );
 
-		$total_items = $wpdb->get_var( 'SELECT count(id) FROM ' . $this->app_table );
+		$total_items = $wpdb->get_var($wpdb->prepare("SELECT count(id) FROM $this->app_table WHERE status=%s", $this->tab ));
 
 		$paged   = isset( $_REQUEST['paged'] ) ? max( 0, intval( $_REQUEST['paged'] ) - 1 ) : 0;
 		$orderby = ( isset( $_REQUEST['orderby'] ) && in_array( $_REQUEST['orderby'], array_keys( $this->get_sortable_columns() ) ) ) ? $_REQUEST['orderby'] : 'id';
@@ -73,8 +73,8 @@ class Breakfast_Applications_List_Table extends WP_List_Table {
 				'desc'
 			) ) ) ? $_REQUEST['order'] : 'asc';
 
-		$this->items = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $this->app_table ORDER BY $orderby $order
-			LIMIT %d OFFSET %d", $per_page, $paged ), ARRAY_A );
+		$this->items = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $this->app_table WHERE status=%s ORDER BY $orderby $order
+			LIMIT %d OFFSET %d", $this->tab, $per_page, $paged ), ARRAY_A );
 
 		$this->set_pagination_args( array(
 			'total_items' => $total_items,

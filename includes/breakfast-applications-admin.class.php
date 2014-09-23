@@ -84,9 +84,14 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 		<div class="wrap">
 			<div class="icon32 icon32-posts-post" id="icon-edit"><br/></div>
 			<h2><?php _e( 'Applications', 'breakfast-application' ) ?></h2>
+			<div style="float: right;">
 
+				<a href="?page=applications&tab=pending">Pending</a> | <a href="?page=applications&tab=approved">Approved</a> |  <a href="?page=applications&tab=denied">Denied</a>
+				
+			</div>
 			<?php
-			$table = new Breakfast_Applications_List_Table( $this->app_table, $this->answer_table );
+			$tab = ($_REQUEST['tab'] == 'approved' || $_REQUEST['tab'] == 'denied' || $_REQUEST['tab'] == 'pending') ? $_REQUEST['tab'] : 'approved';
+			$table = new Breakfast_Applications_List_Table( $this->app_table, $this->answer_table, $tab);
 			$table->prepare_items();
 			$table->display();
 			?>
