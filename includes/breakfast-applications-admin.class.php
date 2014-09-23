@@ -90,7 +90,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 				
 			</div>
 			<?php
-			$tab = ($_REQUEST['tab'] == 'approved' || $_REQUEST['tab'] == 'denied' || $_REQUEST['tab'] == 'pending') ? $_REQUEST['tab'] : 'approved';
+			$tab = ($_REQUEST['tab'] == 'approved' || $_REQUEST['tab'] == 'denied' || $_REQUEST['tab'] == 'pending') ? $_REQUEST['tab'] : 'pending';
 			$table = new Breakfast_Applications_List_Table( $this->app_table, $this->answer_table, $tab);
 			$table->prepare_items();
 			$table->display();
