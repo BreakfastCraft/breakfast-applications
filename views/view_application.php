@@ -81,7 +81,7 @@
 								          name="reason"><?php echo $application['reason']; ?></textarea></dd>
 						</div>
 						<div style="margin-top: 15px;">
-							<button name="op" value="approve" id="op_approve" class="button">Approve</button>
+							<button style="margin-right: 200px;" name="op" value="approve" id="op_approve" class="button">Approve</button>
 							<button name="op" value="deny" id="op_deny" class="button">Deny</button>
 						</div>
 					<?php else: ?>
