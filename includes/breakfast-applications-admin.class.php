@@ -313,6 +313,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 			return "Could not find application #$app_id";
 		}
 		$this->whitelist( $app['minecraft_name'] );
+		$this->notify_email($app['minecraft_name']);
 		$wpdb->update( $this->app_table, array(
 			'status'      => 'approved',
 			'decision_on' => current_time( 'mysql', 1 )
@@ -372,6 +373,18 @@ The BreakfastCraft Team
 EOT;
 		$user    = get_user_by( 'id', $user_id );
 		wp_mail( $user->data->user_email, 'BreakfastCraft Application Status', $content );
+	}
+
+	function notify_email($name) {
+		$content = <<<EOT
+Someone was just approved and needs to be given access to your pack, IGN: $name
+
+EOT;
+		$user = get_user_by('login', 'topher2010');
+		if($user) {
+			wp_mail($user->data->user_email, 'BreakfastCraft New Member', $content);
+		}
+
 	}
 
 	function whitelist( $name ) {
