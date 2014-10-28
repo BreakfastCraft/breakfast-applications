@@ -84,7 +84,7 @@ class Breakfast_Applications_List_Table extends WP_List_Table {
 			) ) ) ? $_REQUEST['order'] : 'desc';
 
 		$this->items = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $this->app_table WHERE status=%s ORDER BY $orderby $order
-			LIMIT %d OFFSET %d", $this->tab, $per_page, $paged ), ARRAY_A );
+			LIMIT %d OFFSET %d", $this->tab, $per_page, $paged*$per_page ), ARRAY_A );
 
 		$this->set_pagination_args( array(
 			'total_items' => $total_items,
