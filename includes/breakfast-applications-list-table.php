@@ -53,6 +53,16 @@ class Breakfast_Applications_List_Table extends WP_List_Table {
 		return $columns;
 	}
 
+	function get_sortable_columns() {
+		$sortable_columns = array(
+			'applied_on' => array('applied_on', false),
+			'username'  => array('username', false),
+			'age'   => array('age', false),
+			'minecraft_name' => array('minecraft_name', false)
+		);
+		return $sortable_columns;
+	}
+
 	function prepare_items() {
 		global $wpdb;
 
@@ -60,18 +70,18 @@ class Breakfast_Applications_List_Table extends WP_List_Table {
 
 		$columns  = $this->get_columns();
 		$hidden   = array();
-		$sortable = array();
+		$sortable = $this->get_sortable_columns();
 
 		$this->_column_headers = array( $columns, $hidden, $sortable );
 
 		$total_items = $wpdb->get_var($wpdb->prepare("SELECT count(id) FROM $this->app_table WHERE status=%s", $this->tab ));
 
 		$paged   = isset( $_REQUEST['paged'] ) ? max( 0, intval( $_REQUEST['paged'] ) - 1 ) : 0;
-		$orderby = ( isset( $_REQUEST['orderby'] ) && in_array( $_REQUEST['orderby'], array_keys( $this->get_sortable_columns() ) ) ) ? $_REQUEST['orderby'] : 'id';
+		$orderby = ( isset( $_REQUEST['orderby'] ) && in_array( $_REQUEST['orderby'], array_keys( $this->get_sortable_columns() ) ) ) ? $_REQUEST['orderby'] : 'applied_on';
 		$order   = ( isset( $_REQUEST['order'] ) && in_array( $_REQUEST['order'], array(
 				'asc',
 				'desc'
-			) ) ) ? $_REQUEST['order'] : 'asc';
+			) ) ) ? $_REQUEST['order'] : 'desc';
 
 		$this->items = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $this->app_table WHERE status=%s ORDER BY $orderby $order
 			LIMIT %d OFFSET %d", $this->tab, $per_page, $paged ), ARRAY_A );
