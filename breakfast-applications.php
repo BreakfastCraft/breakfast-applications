@@ -107,6 +107,8 @@ class Breakfast_Applications_Plugin extends Breakfast_Applications_Base {
 						)
 					);
 				}
+
+				$this->notify_email($_POST['minecraft_name']);
 			}
 			$message = "<strong>Thank you your applying.</strong> We will review your application and get back to you as quickly as we can.";
 		}
@@ -116,6 +118,23 @@ class Breakfast_Applications_Plugin extends Breakfast_Applications_Base {
 		ob_end_clean();
 
 		return $out;
+	}
+
+	function notify_email($name) {
+		$settings = get_option($this->settings_option);
+		$content = <<<EOT
+Someone just applied to join Breakfastcraft, IGN: $name
+
+EOT;
+		foreach(explode(',', $settings['notify_new']) as $name) {
+			$name = trim($name);
+			$user = get_user_by('login', $name);
+			if($user) {
+				wp_mail($user->data->user_email, 'BreakfastCraft Application', $content);
+			}
+		}
+
+
 	}
 
 	function if_menu_conditions() {

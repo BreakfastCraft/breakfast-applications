@@ -75,6 +75,9 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 		add_submenu_page( 'applications', __( 'Servers', 'breakfast-applications' ), __( 'Servers', 'breakfast-applications' ),
 			'promote_users', 'applications_servers', array( $this, 'servers_handler' ) );
 
+		add_submenu_page( 'applications', __( 'Settings', 'breakfast-applications' ), __( 'Settings', 'breakfast-applications'),
+			'promote_users', 'applications_settings', array( $this, 'settings_handler') );
+
 	}
 
 
@@ -97,6 +100,37 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 			?>
 		</div>
 	<?php
+	}
+
+	function settings_handler() {
+		if ( isset( $_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'] ) ) {
+			if ( isset( $_POST['settings'])) {
+				update_option( $this->settings_option, $_POST['settings']);
+			}
+		}
+
+		$settings = get_option($this->settings_option);
+		if ( ! isset( $settings['notify_new'] ) ) {
+			$settings['notify_new'] = '';
+		}
+		if ( ! isset( $settings['notify_approved'] ) ) {
+			$settings['notify_approved'] = '';
+		}
+
+		?>
+		<div class="wrap">
+			<?php
+			printf( '<h2>%s</h2>', esc_html__( 'Applications Settings', 'breakfast-applications') );
+			?>
+			<form name="settings_form" method="post">
+				<?php wp_nonce_field(); ?>
+				<?php include plugin_dir_path( __DIR__ ) . 'views/settings.php'; ?>
+			</form>
+		</div>
+		<?php
+	}
+	function settings_meta_box( $settings ) {
+		include plugin_dir_path( __DIR__ ) . 'views/settings.php';
 	}
 
 	function servers_handler() {
@@ -142,6 +176,8 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 	function servers_meta_box( $servers ) {
 		include plugin_dir_path( __DIR__ ) . 'views/servers.metabox.php';
 	}
+
+
 
 	function questions_handler() {
 		global $wpdb;
@@ -376,14 +412,19 @@ EOT;
 	}
 
 	function notify_email($name) {
+		$settings = get_option($this->settings_option);
 		$content = <<<EOT
 Someone was just approved and needs to be given access to your pack, IGN: $name
 
 EOT;
-		$user = get_user_by('login', 'topher2010');
-		if($user) {
-			wp_mail($user->data->user_email, 'BreakfastCraft New Member', $content);
+		foreach(explode(',', $settings['notify_approved']) as $name) {
+			$name = trim($name);
+			$user = get_user_by('login', $name);
+			if($user) {
+				wp_mail($user->data->user_email, 'BreakfastCraft New Member', $content);
+			}
 		}
+
 
 	}
 
