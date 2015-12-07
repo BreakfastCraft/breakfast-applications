@@ -116,6 +116,32 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 		if ( ! isset( $settings['notify_approved'] ) ) {
 			$settings['notify_approved'] = '';
 		}
+		if ( ! isset( $settings['admin_notify_new_email'] ) ) {
+			$settings['admin_notify_new_email'] = '';
+		}
+		if ( ! isset( $settings['admin_notify_approved_email'] ) ) {
+			$settings['admin_notify_approved_email'] = '';
+		}
+		if ( ! isset( $settings['user_notify_approval_email'] ) ) {
+			$settings['user_notify_approval_email'] = '';
+		}
+		if ( ! isset( $settings['user_notify_denial_email'] ) ) {
+			$settings['user_notify_denial_email'] = '';
+		}
+		if ( ! isset( $settings['admin_notify_new_subject'] ) ) {
+			$settings['admin_notify_new_subject'] = '';
+		}
+		if ( ! isset( $settings['admin_notify_approved_subject'] ) ) {
+			$settings['admin_notify_approved_subject'] = '';
+		}
+		if ( ! isset( $settings['user_notify_approval_subject'] ) ) {
+			$settings['user_notify_approval_subject'] = '';
+		}
+		if ( ! isset( $settings['user_notify_denial_subject'] ) ) {
+			$settings['user_notify_denial_subject'] = '';
+		}
+
+
 
 		?>
 		<div class="wrap">
@@ -298,7 +324,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 
 		if ( ! empty( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], 'view_application' ) ) {
 			if ( $_REQUEST['op'] == 'approve' ) {
-				$message = $this->approve( $_REQUEST['id'] );
+				$message = $this->approve( $_REQUEST['id'], $_REQUEST['reason'] );
 			} elseif ( $_REQUEST['op'] == 'deny' ) {
 				$message = $this->deny( $_REQUEST['id'], $_REQUEST['reason'] );
 			} else {
@@ -341,7 +367,7 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 
 	}
 
-	function approve( $app_id ) {
+	function approve( $app_id, $note ) {
 		global $wpdb;
 
 		$app = $wpdb->get_row( "SELECT * FROM " . $this->app_table . " WHERE id=$app_id", ARRAY_A );
@@ -349,12 +375,13 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 			return "Could not find application #$app_id";
 		}
 		$this->whitelist( $app['minecraft_name'] );
-		$this->notify_email($app['minecraft_name']);
+		$this->admin_approve_email($app['minecraft_name'], $note);
 		$wpdb->update( $this->app_table, array(
 			'status'      => 'approved',
+			'reason'	  => $note,
 			'decision_on' => current_time( 'mysql', 1 )
 		), array( 'id' => $app['id'] ), array( '%s', '%s' ), '%d' );
-		$this->approve_email( $app['user_id'] );
+		$this->user_approve_email( $app['user_id'], $note );
 
 		return 'Application approved.';
 
@@ -372,56 +399,47 @@ class Breakfast_Applications_Admin extends Breakfast_Applications_Base {
 			'reason'      => $reason,
 			'decision_on' => current_time( 'mysql', 1 )
 		), array( 'id' => $app['id'] ), array( '%s', '%s', '%s' ), '%d' );
-		$this->deny_email( $app['user_id'], $reason );
+		$this->user_deny_email( $app['user_id'], $reason );
 
 		return 'Application denied.';
 	}
 
-	function deny_email( $user_id, $reason ) {
-		$content = <<<EOT
-We're sorry but we could not accept your application at this time.
-
-Reason for denial:
-$reason
-
-If feel our reason is wrong, or wish you to discuss your application feel free to join us on our IRC channel.
-
---
-The BreakfastCraft Team
-EOT;
-		$user    = get_user_by( 'id', $user_id );
-		wp_mail( $user->data->user_email, 'BreakfastCraft Application Status', $content );
-
+	function user_deny_email( $user_id, $reason ) {
+		$settings = get_option( $this->settings_option );
+		$content = stripslashes( $settings['user_notify_denial_email'] );
+		if ( ! empty ( $content ) && ! empty( $settings['user_notify_denial_subject'] ) ) {
+			$content = str_replace ( '{{reason}}', $reason, $content );
+			$user = get_user_by ( 'id', $user_id );
+			wp_mail ( $user->data->user_email, $settings['user_notify_denial_subject'], $content );
+		}
 	}
 
-	function approve_email( $user_id ) {
-		$content = <<<EOT
-Congratulations and welcome to BreakfastCraft. Your application has been approved and you are now whitelisted on our servers. Please read and follow all the rules.
+	function user_approve_email( $user_id, $note ) {
+		$settings = get_option( $this->settings_option );
+		$content = stripslashes ( $settings['user_notify_approval_email'] );
+		if ( ! empty ( $content ) && ! empty ( $settings['user_notify_approval_subject'] ) ) {
+			if ( ! empty ( $note ) ) {
+				$note = "Note:\r\n$note";
+			}
+			$content = str_replace ( '{{note}}', $note, $content );
 
-* Rules - http://breakfastcraft.com/rules
-* Connection Information - http://breakfastcraft.com/connection-information
-* IRC - Server: pinebox.ddns.net Channel: #breakfastcraft
-
-Thanks for applying and welcome to the community.
-
---
-The BreakfastCraft Team
-EOT;
-		$user    = get_user_by( 'id', $user_id );
-		wp_mail( $user->data->user_email, 'BreakfastCraft Application Status', $content );
+			$user = get_user_by ( 'id', $user_id );
+			wp_mail ( $user->data->user_email, $settings['user_notify_approval_subject'], $content );
+		}
 	}
 
-	function notify_email($name) {
-		$settings = get_option($this->settings_option);
-		$content = <<<EOT
-Someone was just approved and needs to be given access to your pack, IGN: $name
+	function admin_approve_email($name) {
+		$settings = get_option( $this->settings_option );
+		$content = stripslashes ( $settings['admin_notify_approval_email'] );
+		if ( ! empty ( $content ) && ! empty ( $settings['admin_notify_approval_subject'] ) ) {
+			$content = str_replace ( '{{name}}', $name, $content );
 
-EOT;
-		foreach(explode(',', $settings['notify_approved']) as $name) {
-			$name = trim($name);
-			$user = get_user_by('login', $name);
-			if($user) {
-				wp_mail($user->data->user_email, 'BreakfastCraft New Member', $content);
+			foreach ( explode ( ',', $settings['notify_approved'] ) as $name ) {
+				$name = trim ( $name );
+				$user = get_user_by ( 'login', $name );
+				if ( $user ) {
+					wp_mail ( $user->data->user_email, $settings['admin_notify_approval_subject'], $content );
+				}
 			}
 		}
 
@@ -430,28 +448,31 @@ EOT;
 
 	function whitelist( $name ) {
 		$servers = get_option( $this->servers_option );
-		foreach ( $servers as $server ) {
-			if ( $server['master'] ) {
-				$query = new SourceQuery();
-				try {
-					$query->Connect( $server['host'], $server['port'], 1, SourceQuery::SOURCE );
-					$query->SetRconPassword( $server['pass'] );
-					$query->Rcon( "whitelist add $name" );
-				} catch ( Exception $e ) {
-					echo $e->getMessage();
+		if ( is_array ( $servers ) ) {
+			foreach ( $servers as $server ) {
+				if ( $server['master'] ) {
+					$query = new SourceQuery();
+					try {
+						$query->Connect ( $server['host'], $server['port'], 1, SourceQuery::SOURCE );
+						$query->SetRconPassword ( $server['pass'] );
+						$query->Rcon ( "whitelist add $name" );
+					} catch ( Exception $e ) {
+						echo $e->getMessage ();
+					}
 				}
 			}
-		}
 
-		foreach ( $servers as $server ) {
-			$query = new SourceQuery();
-			try {
-				$query->Connect( $server['host'], $server['port'], 1, SourceQuery::SOURCE );
-				$query->SetRconPassword( $server['pass'] );
-				$query->Rcon( "whitelist reload" );
 
-			} catch ( Exception $e ) {
-				echo $e->getMessage();
+			foreach ( $servers as $server ) {
+				$query = new SourceQuery();
+				try {
+					$query->Connect ( $server['host'], $server['port'], 1, SourceQuery::SOURCE );
+					$query->SetRconPassword ( $server['pass'] );
+					$query->Rcon ( "whitelist reload" );
+
+				} catch ( Exception $e ) {
+					echo $e->getMessage ();
+				}
 			}
 		}
 

@@ -74,7 +74,7 @@
 					<?php if ( $application['status'] == 'pending' ): ?>
 						<div>
 							<dl>
-								<dt>Deny Reason:</dt>
+								<dt>Deny Reason/Approval Notes:</dt>
 							</dl>
 							<dd>
 								<textarea cols="70" rows="5" class="input"
